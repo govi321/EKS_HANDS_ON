@@ -1,0 +1,161 @@
+                                         KUBERNETES
+										 
+								vi Dockerfile
+							  FROM nginx
+							  
+							  save 
+							  ls
+							  docker build -t myappmg1 .
+							  docker imaes
+							  
+							  docker login
+							  username goverdhan3
+							  password Vardhan123!@#
+							  
+							docker push myappmg1
+
+								docker push goverdhan3/myappmg1
+								
+								before that we are adding a tag
+								
+								docker tag myappmg1 goverdhan3/myappmg1:v1
+								
+								docker images
+								
+								docker push goverdhan3/myappmg1
+								
+								then create a eks 
+								
+								loin ec2macine 
+								configure aws and install kubectl
+									
+								aws eks update-kubeconfig --name <EKS_CLUSTER_NAME> --region us-west-2
+	
+								aws eks list-clusters
+								
+								kubectl get nodes
+								
+								kubectl get pods
+								
+								kubectl get all
+									
+								kubetl get deployments
+								
+								kubectl get services
+								
+								docker images
+								
+								kubectl create deploy myppmg1 --image goverdhan3/myappmg1:v1 --dry-run -o yaml >deployment.yaml
+kubectl create deploy myappmg1 --image goverdhan3/myappmg1:v1 --dry-run -o yaml >deployment.yaml
+									ls
+									deployment will create 
+									
+									vi deployment.yaml
+									
+									
+									watch it
+									
+									then take the duplicate session
+
+									watch -x kubectl get all
+									 in main terminal 
+									 
+									 kubectl apply -f deployment.yaml
+									 watch in duplicate session
+									 then create load balancer
+									 
+									 kubectl expose deploy myapp --port 80 --type=LoadBalancer --dry-run -o yaml > service.yaml
+kubectl expose deploy myappmg1 --port 80 --type=LoadBalancer --dry-run -o yaml > service.yaml								 
+									 
+									 root@ip-172-31-30-8:~# cat service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: myappmg1
+  name: myappmg1
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: myappmg1
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+root@ip-172-31-30-8:~# kubectl apply -f service.yaml
+
+watch it 
+										kubectl apply -f service.yaml
+kubectl apply -f service.yaml										
+										
+										external ip is created in duplicate in session
+										take  the external ip brows it 
+										
+Every 2.0s: kubectl get all                                                                                   ip-172-31-30-8: Sat Mar 16 15:27:03 2024
+
+NAME                            READY   STATUS    RESTARTS   AGE
+pod/myappmg1-54fb85577d-twdnj   1/1     Running   0          27m
+
+NAME                 TYPE           CLUSTER-IP      EXTERNAL-IP                                                                   PORT(S)        AGE
+service/kubernetes   ClusterIP      10.100.0.1      <none>                                                                        443/TCP        179m
+service/myappmg1     LoadBalancer   10.100.187.91   a29fba7860c704b70884aa71becb101a-678797799.ap-southeast-1.elb.amazonaws.com   80:30635/TCP   3m22s
+NAME                       READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/myappmg1   1/1     1            1           27m
+
+NAME                                  DESIRED   CURRENT   READY   AGE
+replicaset.apps/myappmg1-54fb85577d   1         1         1       27m
+
+										
+										
+										will saw the nginx
+										
+										then we can configure the replicas
+										
+										vi deployment.yaml
+										in  replicas insted of 1 set it  3
+										
+										kubectl apply -f deployment.yam
+										
+										
+Every 2.0s: kubectl get all                                                                                   ip-172-31-30-8: Sat Mar 16 15:29:35 2024
+
+NAME                            READY   STATUS    RESTARTS   AGE
+pod/myappmg1-54fb85577d-7cv2c   1/1     Running   0          33s
+pod/myappmg1-54fb85577d-8rs8v   1/1     Running   0          33s
+pod/myappmg1-54fb85577d-twdnj   1/1     Running   0          30m
+
+NAME                 TYPE           CLUSTER-IP      EXTERNAL-IP                                                                   PORT(S)        AGE
+service/kubernetes   ClusterIP      10.100.0.1      <none>                                                                        443/TCP        3h1m
+service/myappmg1     LoadBalancer   10.100.187.91   a29fba7860c704b70884aa71becb101a-678797799.ap-southeast-1.elb.amazonaws.com   80:30635/TCP   5m53s
+NAME                       READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/myappmg1   3/3     3            3           30m
+
+NAME                                  DESIRED   CURRENT   READY   AGE
+replicaset.apps/myappmg1-54fb85577d   3         3         3       30m
+
+
+										
+										
+										then delation process
+										
+										kubectl delete service/myappmg1
+										
+										kubectl delete deployment.app/myappmg1
+										
+										
+										
+										
+
+										
+										
+										
+									
+									
+									
+								
+								
+							  
+							  
