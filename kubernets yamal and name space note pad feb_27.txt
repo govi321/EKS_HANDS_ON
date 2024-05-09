@@ -1,0 +1,299 @@
+AFETR INSTALLING CLUSTER INSTALL KUBECTL AND NODE GROUP
+
+kubectl get pods
+
+kubectl get nodes
+kubectl get svc
+
+kubectl get all
+
+mkdir kdemo
+cd kdemo
+
+sudo docker images
+
+kubectl create deploy myapp --image goverdhan1/nginx:v1 --dry-run -o yaml > deployment.yaml
+ll
+vi deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: myapp
+  name: myapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: myapp
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - image: goverdhan1/nginx:v1
+        name: nginx
+        resources: {}
+status: {}
+
+
+kubectl apply -f deployment.yaml
+
+kubetcl get pods
+
+kubectl expose deploy myapp --port 80 --type=LoadBalancer --dry-run -o yaml > service.yaml
+
+vi service.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: myapp
+  name: myapp
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: myapp
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+
+
+
+take duplicate session
+
+wacth -x kubectlget all
+
+
+kubectl apply -f service.yaml
+
+take duplicate session
+
+wacth -x kubectlget all
+
+Every 2.0s: kubectl get all                                                                  ip-172-31-4-241: Tue May  7 06:23:07 2024
+
+NAME                         READY   STATUS    RESTARTS   AGE
+pod/myapp-67c685d97c-5ddqg   1/1     Running   0          4m59s
+
+NAME                 TYPE           CLUSTER-IP    EXTERNAL-IP                                                                    PORT(
+S)        AGE
+service/kubernetes   ClusterIP      10.100.0.1    <none>                                                                         443/T
+CP        2d22h
+service/myapp        LoadBalancer   10.100.2.50   ad68d53cab8c040ee91cf383395975aa-1766826477.ap-southeast-2.elb.amazonaws.com   80:31
+258/TCP   42s
+
+NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/myapp   1/1     1            1           4m59s
+
+NAME                               DESIRED   CURRENT   READY   AGE
+replicaset.apps/myapp-67c685d97c   1         1         1       4m59s
+
+
+
+                                 name space
+kubectl get namespace 
+
+root@ip-172-31-4-241:~/kdemo# kubectl get namespace
+NAME              STATUS   AGE
+default           Active   2d22h
+kube-node-lease   Active   2d22h
+kube-public       Active   2d22h
+kube-system       Active   2d22h
+root@ip-172-31-4-241:~/kdemo#
+these default name space
+
+kubectl create namespace ns1
+
+kubectl get namespace
+root@ip-172-31-4-241:~/kdemo# kubectl get namespace
+NAME              STATUS   AGE
+default           Active   2d22h
+kube-node-lease   Active   2d22h
+kube-public       Active   2d22h
+kube-system       Active   2d22h
+ns1               Active   40s
+root@ip-172-31-4-241:~/kdemo#
+
+
+first delete everything
+
+kubcetl delete service/myapp
+
+it is in defauly name space
+
+kubectl delete deployment.app/myapp
+
+vi deployment.yaml
+change the replicaset 1 to 3
+
+kubectl get name space
+root@ip-172-31-4-241:~/kdemo# kubectl get namespace
+NAME              STATUS   AGE
+default           Active   2d23h
+kube-node-lease   Active   2d23h
+kube-public       Active   2d23h
+kube-system       Active   2d23h
+ns1               Active   5m25s
+root@ip-172-31-4-241:~/kdemo#
+
+
+take the duplicate session
+watch -x kubectl get all --namespace ns1
+
+kubectl apply -f deployment.yaml --namespace ns1
+root@ip-172-31-4-241:~/kdemo# kubectl apply -f deployment.yaml --namespace ns1
+deployment.apps/myapp created
+
+ pods are created in namespace1
+
+NAME                         READY   STATUS    RESTARTS   AGE
+pod/myapp-67c685d97c-ftx6k   1/1     Running   0          74s
+pod/myapp-67c685d97c-mvf6x   1/1     Running   0          74s
+pod/myapp-67c685d97c-sp7bn   1/1     Running   0          74s
+
+NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/myapp   3/3     3            3           74s
+
+NAME                               DESIRED   CURRENT   READY   AGE
+replicaset.apps/myapp-67c685d97c   3         3         3       74s
+
+
+then delete the deployment.yaml
+
+ kubectl delete service/myapp --namespace ns1
+
+kubectl delete deployment.apps/myapp --namespacens1
+
+kbetcl delete namespace ns1
+
+kubetcl get namespace
+
+                                   SIDE CAR
+
+one micro services running in one container it is uses the cache container as well as logs service container
+
+these all are runing on one pod besically cache container and logs service containers are called --side car
+
+vi sidecar.yaml
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: nginx-webapp
+  name: nginx-webapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-webapp
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: nginx-webapp
+    spec:
+      containers:
+      - image: busybox
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do echo echo $(date -u) 'Hi I am from sidecar container1' >> /var/log/index.html; sleep 5;done"]
+        name: sidecar-container1
+        resources: {}
+        volumeMounts:
+          - name: var-logs
+            mountPath: /var/log
+      - image: busybox
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do echo echo $(date -u) 'Hi I am from sidecar container2' >> /var/log/index.html; sleep 5;done"]
+        name: sidecar-container2
+        resources: {}
+        volumeMounts:
+          - name: var-logs
+            mountPath: /var/log
+      - image: nginx
+        name: main-container
+        resources: {}
+        ports:
+          - containerPort: 80
+        volumeMounts:
+          - name: var-logs
+            mountPath: /usr/share/nginx/html
+      dnsPolicy: Default
+      volumes:
+      - name: var-logs
+        emptyDir: {}
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-webapp
+  labels:
+    run: nginx-webapp
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+  selector:
+    app: nginx-webapp
+  type: LoadBalancer
+
+
+kubectl appply -f sidecar.yaml
+
+take the duplicate session
+
+watch -x kubectl get all
+
+Every 2.0s: kubectl get all                                                                  ip-172-31-4-241: Tue May  7 07:41:58 2024
+
+NAME                                READY   STATUS    RESTARTS   AGE
+pod/myapp-674bb65887-cs469          2/2     Running   0          55m
+pod/nginx-webapp-667b758684-2pzhq   3/3     Running   0          7m58s
+
+NAME                   TYPE           CLUSTER-IP      EXTERNAL-IP                                                                   PO
+RT(S)        AGE
+service/kubernetes     ClusterIP      10.100.0.1      <none>                                                                        44
+3/TCP        3d
+service/nginx-webapp   LoadBalancer   10.100.18.105   aed103a514e6047728cc40aa551cbf34-999316503.ap-southeast-2.elb.amazonaws.com   80
+:31740/TCP   7m58s
+
+NAME                           READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/myapp          1/1     1            1           55m
+deployment.apps/nginx-webapp   1/1     1            1           7m59s
+
+NAME                                      DESIRED   CURRENT   READY   AGE
+replicaset.apps/myapp-674bb65887          1         1         1       55m
+replicaset.apps/nginx-webapp-667b758684   1         1         1       7m58s
+
+
+create aload balanecer browser it
+
+out put fo load balancer
+   
+echo Tue May 7 07:34:06 UTC 2024 Hi I am from sidecar container1  
+ 
+ echo Tue May 7 07:34:06 UTC 2024 Hi I am from sidecar container2    
+
+ echo Tue May 7 07:34:11 UTC 2024 Hi I am from sidecar container1
+
+echo Tue May 7 07:34:06 UTC 2024 Hi I am from sidecar container2
+
+
+
+
+
