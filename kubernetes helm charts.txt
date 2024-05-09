@@ -1,0 +1,556 @@
+helm charts ==> package manager for k8s application
+
+for linux {yum ,aptget }
+
+tomcat ==>jdk dependence
+
+==>proper version controle
+
+
+                          installling helm chat 
+
+curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -
+
+sudo apt-get install apt-transport-https --yes
+
+echo "deb https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+
+sudo apt-get update
+
+sudo apt-get install helm
+
+helm version
+
+sudo apt-get install tree
+
+mkdir charts
+
+cd charts
+
+sudo helm create myapp
+
+ls
+
+tree myapp
+root@ip-172-31-4-241:~/Charts/myapp# cd ..
+root@ip-172-31-4-241:~/Charts# tree
+.
+└── myapp
+    ├── Chart.yaml
+    ├── charts
+    ├── templates
+    │   ├── NOTES.txt
+    │   ├── _helpers.tpl
+    │   ├── deployment.yaml
+    │   ├── hpa.yaml
+    │   ├── ingress.yaml
+    │   ├── service.yaml
+    │   ├── serviceaccount.yaml
+    │   └── tests
+    │       └── test-connection.yaml
+    └── values.yaml
+
+5 directories, 10 files
+root@ip-172-31-4-241:~/Charts#
+
+
+chart.yaml & template created automatically
+
+rm -rf myapp
+
+Then create manually
+
+mkdir myapp
+
+cd myapp
+
+
+touch Chart.yaml 
+
+ls
+
+mkdir templates
+
+cd ..
+
+tree myapp
+
+root@ip-172-31-4-241:~/Charts# tree
+.
+└── myapp
+    ├── Chart.yaml
+    └── template
+
+3 directories, 1 file
+root@ip-172-31-4-241:~/Charts#
+
+
+cd myapp
+
+ls
+
+vi Chart.yaml
+
+apiVersion: v2
+name: myapp
+version: 0.1.0
+appVersion: 1.0
+description: A Helm chart for kubernetes
+
+save
+ cd template
+ 
+ ls
+ 
+ cd ..
+ docker images
+ 
+ docker hub image  should be present
+ 
+ example: goverdhan/myapp:v1
+ 
+ docker login 
+ 
+ usrname:
+ password:
+ 
+ cd template
+ 
+ kubectl create deploy myapp --image goverdhan3/myappmg1:v1 --dry-run -o yaml > deployment.yaml(this is example)
+
+kubectl create deploy myapp --image goverdhan1/nginx:v1 --dry-run -o yaml > deployment.yaml
+ 
+ ls
+ 
+ deployment.yaml
+ 
+ will be present
+  cd ..
+  
+  tree .
+  
+ 
+ take the duplcate session 
+ 
+ sudo sudo
+ 
+ 
+ watch -x kubectl get all
+ 
+ in main server
+ 
+ under myapp directry
+ 
+ sudo helm install myapp .
+
+root@ip-172-31-4-241:~/Charts/myapp# sudo helm install myapp .
+NAME: myapp
+LAST DEPLOYED: Wed May  8 05:16:52 2024
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+root@ip-172-31-4-241:~/Charts/myapp#
+
+      in duplicate session
+
+Every 2.0s: kubectl get all                                                                  ip-172-31-4-241: Wed May  8 05:51:04 2024
+
+NAME                         READY   STATUS    RESTARTS   AGE
+pod/myapp-67c685d97c-84zmk   1/1     Running   0          11s
+
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.100.0.1   <none>        443/TCP   3d22h
+
+NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/myapp   1/1     1            1           12s
+
+NAME                               DESIRED   CURRENT   READY   AGE
+replicaset.apps/myapp-67c685d97c   1         1       
+
+
+ 
+ vi /template/deployment
+ 
+ change the replicaset 1 to 3 
+ 
+ then the update the chart version
+ 
+ vi Chart.yaml
+ 
+ change the version 0.1.0 to 0.1.1
+ 
+ save 
+ 
+ helm upgrade myapp .
+ 
+ it will create a three pods
+
+ery 2.0s: kubectl get all                                                                            ip-172-31-4-241: Wed May  8 06:20:39 2024
+
+NAME                         READY   STATUS    RESTARTS   AGE
+pod/myapp-67c685d97c-2qtlg   1/1     Running   0          56s
+pod/myapp-67c685d97c-84zmk   1/1     Running   0          29m
+pod/myapp-67c685d97c-fbn6v   1/1     Running   0          56s
+
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.100.0.1   <none>        443/TCP   3d22h
+
+NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/myapp   3/3     3            3           29m
+
+NAME                               DESIRED   CURRENT   READY   AGE
+replicaset.apps/myapp-67c685d97c   3         3         3       29m
+
+ 
+ helm histroy myapp .
+ 
+ i want roll back prevous version
+ 
+ helm rollback myapp 1
+
+Every 2.0s: kubectl get all
+                                                                            ip-172-31-4-241: Wed May  8 06:23:43 2024
+
+NAME                         READY   STATUS    RESTARTS   AGE
+pod/myapp-67c685d97c-84zmk   1/1     Running   0          32m
+
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.100.0.1   <none>        443/TCP   3d22h
+
+NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/myapp   1/1     1            1           32m
+
+NAME                               DESIRED   CURRENT   READY   AGE
+replicaset.apps/myapp-67c685d97c   1         1         1       32m
+
+
+
+ 
+ let's cteate service.yaml
+ 
+ cd template
+ 
+ kubectl expose deploy myapp --port 80 --type=LoadBalancer --dry-run -o yaml >service.yaml(thi is example)
+
+kubectl expose deploy myapp --port 80 --type=LoadBalancer --dry-run -o yaml > service.yaml
+
+ 
+ ls
+ 
+ cd ..
+ 
+ tree .
+  vi Chart.yaml
+  change the version 0.1.1 to 0.1.1.2
+  
+  save
+  
+  sudo helm upgrade myapp .
+
+in duplcate session
+
+Every 2.0s: kubectl get all                                                                            ip-172-31-4-241: Wed May  8 06:29:28 2024
+
+NAME                         READY   STATUS    RESTARTS   AGE
+pod/myapp-67c685d97c-7snk9   1/1     Running   0          37s
+pod/myapp-67c685d97c-84zmk   1/1     Running   0          38m
+pod/myapp-67c685d97c-gmf2r   1/1     Running   0          37s
+
+NAME                 TYPE           CLUSTER-IP      EXTERNAL-IP                                                                    PORT(S)
+  AGE
+service/kubernetes   ClusterIP      10.100.0.1      <none>                                                                         443/TCP
+  3d22h
+service/myapp        LoadBalancer   10.100.17.129   afab61c4a4d174089b59fe608f185204-1135064426.ap-southeast-2.elb.amazonaws.com   80:32465/TCP
+  37s
+
+NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/myapp   3/3     3            3           38m
+
+NAME                               DESIRED   CURRENT   READY   AGE
+replicaset.apps/myapp-67c685d97c   3         3         3       38m
+
+
+
+
+  
+  load balancer will created 
+  
+  helm history myapp .
+  helm rollback mypp 1
+
+Every 2.0s: kubectl get all                                                                            ip-172-31-4-241: Wed May  8 06:33:39 2024
+
+NAME                         READY   STATUS    RESTARTS   AGE
+pod/myapp-67c685d97c-84zmk   1/1     Running   0          42m
+
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.100.0.1   <none>        443/TCP   3d23h
+
+NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/myapp   1/1     1            1           42m
+
+NAME                               DESIRED   CURRENT   READY   AGE
+replicaset.apps/myapp-67c685d97c   1         1         1       42m
+
+
+
+ 
+
+    helm rollback myapp 2
+
+Every 2.0s: kubectl get all                                                                            ip-172-31-4-241: Wed May  8 06:34:26 2024
+
+NAME                         READY   STATUS    RESTARTS   AGE
+pod/myapp-67c685d97c-84zmk   1/1     Running   0          43m
+pod/myapp-67c685d97c-m4xkd   1/1     Running   0          3s
+pod/myapp-67c685d97c-vmm5q   1/1     Running   0          3s
+
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.100.0.1   <none>        443/TCP   3d23h
+
+NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/myapp   3/3     3            3           43m
+
+NAME                               DESIRED   CURRENT   READY   AGE
+replicaset.apps/myapp-67c685d97c   3         3         3       43m
+
+
+  
+ only  pods are created 
+
+if we want service.yaml 
+
+then we can run rollback to myapp 4
+
+sudo helm uninstall myapp
+
+tree .
+
+touch values.yaml
+
+tree .
+
+vi values.yaml
+replicaCount: 1
+
+save
+ 
+ ls
+ vi template/deployment
+ 
+ change the repicas {{ .Values.replicaCount}}
+save
+
+sudo helm install myapp .
+
+root@ip-172-31-4-241:~/charts/myapp# sudo helm install myapp .
+NAME: myapp
+LAST DEPLOYED: Wed May  8 06:43:29 2024
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+
+
+
+                          out put 
+
+Every 2.0s: kubectl get all                                                                            ip-172-31-4-241: Wed May  8 06:45:22 2024
+
+NAME                         READY   STATUS    RESTARTS   AGE
+pod/myapp-67c685d97c-92lkh   1/1     Running   0          114s
+
+NAME                 TYPE           CLUSTER-IP      EXTERNAL-IP                                                                    PORT(S)
+  AGE
+service/kubernetes   ClusterIP      10.100.0.1      <none>                                                                         443/TCP
+  3d23h
+service/myapp        LoadBalancer   10.100.64.146   a464708cd9bc64badbe31808c6ee7773-1659136495.ap-southeast-2.elb.amazonaws.com   80:32196/TCP
+  114s
+
+NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/myapp   1/1     1            1           114s
+
+NAME                               DESIRED   CURRENT   READY   AGE
+replicaset.apps/myapp-67c685d97c   1         1         1       114s
+
+
+
+
+sudo helm upgrade myapp . --set replicaCount=3
+
+root@ip-172-31-4-241:~/charts/myapp# sudo helm upgrade myapp . --set replicaCount=3
+Release "myapp" has been upgraded. Happy Helming!
+NAME: myapp
+LAST DEPLOYED: Wed May  8 06:46:53 2024
+NAMESPACE: default
+STATUS: deployed
+REVISION: 2
+TEST SUITE: None
+root@ip-172-31-4-241:~/charts/myapp#
+                                
+
+                                   out put
+
+Every 2.0s: kubectl get all                                                                            ip-172-31-4-241: Wed May  8 06:47:23 2024
+
+NAME                         READY   STATUS    RESTARTS   AGE
+pod/myapp-67c685d97c-4f27h   1/1     Running   0          30s
+pod/myapp-67c685d97c-92lkh   1/1     Running   0          3m55s
+pod/myapp-67c685d97c-qglnc   1/1     Running   0          30s
+
+NAME                 TYPE           CLUSTER-IP      EXTERNAL-IP                                                                    PORT(S)
+  AGE
+service/kubernetes   ClusterIP      10.100.0.1      <none>                                                                         443/TCP
+  3d23h
+service/myapp        LoadBalancer   10.100.64.146   a464708cd9bc64badbe31808c6ee7773-1659136495.ap-southeast-2.elb.amazonaws.com   80:32196/TCP
+  3m55s
+
+NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/myapp   3/3     3            3           3m55s
+
+NAME                               DESIRED   CURRENT   READY   AGE
+replicaset.apps/myapp-67c685d97c   3         3         3       3m55s
+
+
+ 
+ 
+
+sudo helm history myapp 
+
+root@ip-172-31-4-241:~/charts/myapp# sudo helm history myapp
+REVISION        UPDATED                         STATUS          CHART           APP VERSION     DESCRIPTION
+1               Wed May  8 06:43:29 2024        superseded      myapp-0.1.2     1               Install complete
+2               Wed May  8 06:46:53 2024        deployed        myapp-0.1.2     1               Upgrade complete
+
+
+sudo helm upgrade myapp . --set replicaCount=5
+
+root@ip-172-31-4-241:~/charts/myapp# sudo helm upgrade myapp . --set replicaCount=5
+Release "myapp" has been upgraded. Happy Helming!
+NAME: myapp
+LAST DEPLOYED: Wed May  8 06:49:59 2024
+NAMESPACE: default
+STATUS: deployed
+REVISION: 3
+TEST SUITE: None
+                                out put
+
+
+Every 2.0s: kubectl get all                                                                            ip-172-31-4-241: Wed May  8 06:50:49 2024
+
+NAME                         READY   STATUS    RESTARTS   AGE
+pod/myapp-67c685d97c-4f27h   1/1     Running   0          3m56s
+pod/myapp-67c685d97c-92lkh   1/1     Running   0          7m21s
+pod/myapp-67c685d97c-9m9bs   1/1     Running   0          50s
+pod/myapp-67c685d97c-qglnc   1/1     Running   0          3m56s
+pod/myapp-67c685d97c-sxlr6   1/1     Running   0          50s
+
+NAME                 TYPE           CLUSTER-IP      EXTERNAL-IP                                                                    PORT(S)
+  AGE
+service/kubernetes   ClusterIP      10.100.0.1      <none>                                                                         443/TCP
+  3d23h
+service/myapp        LoadBalancer   10.100.64.146   a464708cd9bc64badbe31808c6ee7773-1659136495.ap-southeast-2.elb.amazonaws.com   80:32196/TCP
+  7m21s
+
+NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/myapp   5/5     5            5           7m21s
+
+NAME                               DESIRED   CURRENT   READY   AGE
+replicaset.apps/myapp-67c685d97c   5         5         5       7m21s
+
+
+
+helm rollback myapp 1
+
+root@ip-172-31-4-241:~/charts/myapp# helm rollback myapp 1
+Rollback was a success! Happy Helming!
+root@ip-172-31-4-241:~/charts/myapp#
+                                 
+                                     out put
+
+Every 2.0s: kubectl get all                                                                            ip-172-31-4-241: Wed May  8 06:52:14 2024
+
+NAME                         READY   STATUS    RESTARTS   AGE
+pod/myapp-67c685d97c-4f27h   1/1     Running   0          5m21s
+
+NAME                 TYPE           CLUSTER-IP      EXTERNAL-IP                                                                    PORT(S)
+  AGE
+service/kubernetes   ClusterIP      10.100.0.1      <none>                                                                         443/TCP
+  3d23h
+service/myapp        LoadBalancer   10.100.64.146   a464708cd9bc64badbe31808c6ee7773-1659136495.ap-southeast-2.elb.amazonaws.com   80:32196/TCP
+  8m46s
+
+NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/myapp   1/1     1            1           8m46s
+
+NAME                               DESIRED   CURRENT   READY   AGE
+replicaset.apps/myapp-67c685d97c   1         1         1       8m46s
+
+
+ 
+ sudo helm uninstall myapp 
+    sudo helm show values .
+
+root@ip-172-31-4-241:~/charts/myapp# sudo helm show values .
+replicaCount: 1
+
+root@ip-172-31-4-241:~/charts/myapp#
+
+
+vi /tmp/cparams
+
+replicaCount: 4
+
+save
+
+sudo helm install myapp .
+
+root@ip-172-31-4-241:~/charts/myapp# sudo helm install myapp .
+NAME: myapp
+LAST DEPLOYED: Wed May  8 07:01:17 2024
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+root@ip-172-31-4-241:~/charts/myapp#
+
+
+helm upgrade myapp . --values /tmp/cparams
+
+root@ip-172-31-4-241:~/charts/myapp# helm upgrade myapp . --values /tmp/cparams
+Release "myapp" has been upgraded. Happy Helming!
+NAME: myapp
+LAST DEPLOYED: Wed May  8 07:02:41 2024
+NAMESPACE: default
+STATUS: deployed
+REVISION: 2
+TEST SUITE: None
+root@ip-172-31-4-241:~/charts/myapp#
+
+
+ helm uninstall myapp
+ 
+ 
+
+
+
+
+
+
+
+
+
+
+  
+ 
+ 
+ 
+ 
+
+
+
+
+
+
+	
